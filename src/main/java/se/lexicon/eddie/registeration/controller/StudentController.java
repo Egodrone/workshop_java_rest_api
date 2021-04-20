@@ -36,6 +36,7 @@ public class StudentController {
 
     @PostMapping("/")
     public ResponseEntity<Student> save(@RequestBody Student student) {
+        System.out.println(student.toString());
         Student result = studentRepository.save(student);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
@@ -44,13 +45,34 @@ public class StudentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Student> findById(@PathVariable("id") String id){
-        System.out.println("ID: " + id);
+        System.out.println("Id: " + id);
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isPresent())
             return ResponseEntity.ok(optionalStudent.get()); // 200
         else
             return ResponseEntity.noContent().build(); // 204
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable("id") String id){
+        Optional<Student> optionalCustomer = studentRepository.findById(id);
+
+        if (optionalCustomer.isPresent()){
+            studentRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).build(); // 200
+        }else{
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 - data not found
+        }
+    }
+
+
+    @PutMapping("/")
+    public ResponseEntity<Student> update(@RequestBody Student student){
+        Student result = studentRepository.save(student);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
 

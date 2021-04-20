@@ -1,7 +1,9 @@
 package se.lexicon.eddie.registeration.repository;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import se.lexicon.eddie.registeration.entity.Student;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 
@@ -27,10 +30,12 @@ public class StudentRepositoryTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private Student savedStudent;
 
     @BeforeEach
-    public void setup(){
+    public void setup() throws Exception {
         objectMapper= new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
         student = new Student();
         student.setAge(43);
@@ -39,6 +44,17 @@ public class StudentRepositoryTest {
         student.setLastName("Watson");
         student.setGender("Male");
         student.setPhoneNumber("767676876");
+
+        String studentJsonMessage= objectMapper.writeValueAsString(student);
+        System.out.println("customerJsonMessage = " + studentJsonMessage);
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/v1/student/")
+                .content(studentJsonMessage)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+        ).andReturn();
+
+        String responseJsonMessage = mvcResult.getResponse().getContentAsString();
+        savedStudent = objectMapper.readValue(responseJsonMessage, new TypeReference<Student>() {});
     }
 
 
@@ -47,6 +63,7 @@ public class StudentRepositoryTest {
     public void save_student() throws Exception {
         String studentJsonMessage= objectMapper.writeValueAsString(student);
         System.out.println("customerJsonMessage = " + studentJsonMessage);
+
         MvcResult mvcResult = mockMvc.perform(post("/api/v1/student/")
                 .content(studentJsonMessage)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
@@ -54,24 +71,6 @@ public class StudentRepositoryTest {
 
         int status = mvcResult.getResponse().getStatus();
         Assertions.assertEquals(201, status);
-    }
-
-
-    @DisplayName("Save student to the database")
-    @Test
-    public String save_student_2() throws Exception {
-        String studentJsonMessage= objectMapper.writeValueAsString(student);
-        System.out.println("customerJsonMessage = " + studentJsonMessage);
-        MvcResult mvcResult = mockMvc.perform(post("/api/v1/student/")
-                .content(studentJsonMessage)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-        ).andReturn();
-
-        int status = mvcResult.getResponse().getStatus();
-        Assertions.assertEquals(201, status);
-
-        //return uuid
-        return null;
     }
 
 
@@ -89,8 +88,13 @@ public class StudentRepositoryTest {
     @DisplayName("Find student by UUID")
     @Test
     public void find_student_by_uuid() throws Exception {
-        //get uuid and search for it
-        save_student_2();
+        System.out.println(savedStudent.getId());
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/v1/student/" + savedStudent.getId())
+        ).andReturn();
+
+        int status = mvcResult.getResponse().getStatus();
+        Assertions.assertEquals(200, status);
     }
 
 
