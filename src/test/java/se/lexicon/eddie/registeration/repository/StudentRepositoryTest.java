@@ -98,4 +98,16 @@ public class StudentRepositoryTest {
     }
 
 
+    @DisplayName("Remove student by using UUID")
+    @Test
+    public void remove_student_by_uuid() throws Exception {
+
+        MvcResult mvcResult = mockMvc.perform(delete("/api/v1/student/" + savedStudent.getId())
+        ).andReturn();
+
+        int status = mvcResult.getResponse().getStatus();
+        Assertions.assertEquals(200, status);
+    }
+
+    
 }
